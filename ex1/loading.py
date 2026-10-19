@@ -1,84 +1,68 @@
-import sys
 from importlib import metadata
 
 
-def compare_packages() -> None:
-    packages = ["numpy", "pandas", "matplotlib"]
+def check_dependencies() -> bool:
+    packages = {
+        "pandas": "Data manipulation ready",
+        "numpy": "Numerical computation ready",
+        "matplotlib": "Visualization ready",
+    }
 
-    for package in packages:
+    print("Checking dependencies:")
+    missing = []
+
+    for package, description in packages.items():
         try:
             version = metadata.version(package)
-            print(f"{package}: {version}")
-        except metadata.PackageNotFoundError:
-            print(f"{package}: NOT INSTALLED")
+            __import__(package)
+            print(f"[OK] {package} ({version}) - {description}")
+        except (ImportError, metadata.PackageNotFoundError):
+            print(f"[ERROR] {package} - Not available")
+            missing.append(package)
 
+    if missing:
+        print("\nSome dependencies are missing.")
+        print("Install them using one of the following:")
+        print("pip: python -m pip install -r requirements.txt")
+        print("Poetry: poetry install")
+        return False
 
-def show_package_management() -> None:
-    """Explain the differences between pip and Poetry."""
-    print("\n=== Dependency Management ===")
-
-    print("pip:")
-    print("  Install packages with: pip install -r requirements.txt")
-    print("  Dependencies are listed in requirements.txt")
-
-    print("\nPoetry:")
-    print("  Install dependencies with: poetry install")
-    print("  Dependencies are listed in pyproject.toml")
-    print("  poetry.lock records resolved dependency versions")
+    return True
 
 
 def main() -> None:
-    print("=== MATRIX DATA ANALYSIS ===")
+    print("LOADING STATUS: Loading programs...\n")
 
-    # Handle missing external dependencies
-    try:
-        import numpy as np
-        import pandas as pd
-        import matplotlib.pyplot as plt
-    except ImportError as error:
-        print(f"ERROR: Missing dependency: {error.name}")
-        print("Install dependencies using pip or Poetry.")
-        print("pip: pip install -r requirements.txt")
-        print("Poetry: poetry install")
+    if not check_dependencies():
         return
+    print()
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
 
-    # Generate simulated Matrix data using NumPy
+    print("Analyzing Matrix data...")
+
+    # Generate 1000 simulated data points using NumPy
     rng = np.random.default_rng(seed=42)
+    matrix = rng.random((10, 10))
+    print(f"Processing {matrix.size} data points...")
 
-    data = rng.normal(loc=100, scale=15, size=(10, 3))
+    # Analyze data using pandas
+    df = pd.DataFrame(matrix, columns=[
+        f"Column_{i + 1}" for i in range(matrix.shape[1])
+    ])
+    print("Mean of each column:")
 
-    # Use pandas to organize and analyze the data
-    df = pd.DataFrame(
-        data,
-        columns=["Red Pill", "Blue Pill", "Green Pill"],
-    )
-
-    print("\n--- Simulated Matrix Data ---")
-    print(df.round(2))
-
-    print("\n--- Statistical Analysis ---")
-    print(df.describe().round(2))
-
-    # Visualize the data using Matplotlib
-    df.plot(
-        kind="line",
-        marker="o",
-        title="Matrix Data Simulation",
-    )
-    plt.xlabel("Simulation Step")
-    plt.ylabel("Matrix Value")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig("matrix_data.png")
-    print("\nGraph saved as matrix_data.png")
-
-    # Compare installed package versions
-    compare_packages()
-
-    # Explain pip and Poetry
-    show_package_management()
-
-    print("\nSUCCESS: Matrix data analysis complete!")
+    print("Generating visualization...\n")
+    plt.imshow(matrix, aspect="auto")
+    plt.colorbar(label="Value")
+    plt.title("Matrix Data Analysis")
+    plt.xlabel("Column")
+    plt.ylabel("Row")
+    plt.savefig("matrix_analysis.png")
+    plt.close()
+    print("Analysis complete!")
+    print("Results saved to: matrix_analysis.png")
 
 
 if __name__ == "__main__":
